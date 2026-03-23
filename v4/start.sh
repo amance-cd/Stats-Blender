@@ -2,6 +2,9 @@
 
 # Stats-Blender Launch Script (Mac/Linux)
 
+# Ensure we are in the script's directory
+cd "$(dirname "$0")"
+
 echo "Starting Stats-Blender..."
 
 # Check if Python is installed

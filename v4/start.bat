@@ -1,6 +1,9 @@
 @echo off
 title Stats-Blender Launcher
 
+:: Ensure we are in the script's directory
+cd /d "%~dp0"
+
 echo Starting Stats-Blender...
 
 :: Check for Python
