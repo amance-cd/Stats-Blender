@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Stats-Blender</title>
+    <!--Link to css file --> 
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-text">Stats Blender</span>
+            <div class="logo-credit">by Amance</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="nav-link active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-page="search"><span class="nav-icon">🔍</span> Search</a></li>
+            <li><a href="#" class="nav-link" data-page="tracks"><span class="nav-icon">🎶</span> Tracks</a></li>
+            <li><a href="#" class="nav-link" data-page="artists"><span class="nav-icon">🎤</span> Artists</a></li>
+            <li><a href="#" class="nav-link" data-page="albums"><span class="nav-icon">💿</span> Albums</a></li>
+        </ul>
+        <div class="pinned-searches" id="pinnedSearches"></div>
+        <div class="sidebar-footer">
+            <a href="#" class="nav-link" data-page="import"><span class="nav-icon">📥</span> Import</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content" id="content">
+        <!-- Top Bar: Filters -->
+        <div class="top-bar" id="topBar">
+            <div class="filter-bar" id="filterBar">
+                <div class="filter-presets" style="display: flex; gap: 8px; align-items: center; justify-content: flex-start; margin-right: auto;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-right: 15px;">
+                        <div style="display: flex; background: transparent; border-radius: 20px; border: 1px solid #404040;">
+                            <button class="filter-btn active sort-btn" data-sort="0" style="margin: 0; border: none; border-radius: 20px;">Duration</button>
+                            <button class="filter-btn sort-btn" data-sort="1" style="margin: 0; border: none; border-radius: 20px;">Plays</button>
+                        </div>
+                    </div>
+                    <button class="filter-btn active" data-filter="all">All Time</button>
+                    <button class="filter-btn" data-filter="this_year">This Year</button>
+                    <button class="filter-btn" data-filter="last_year">Last Year</button>
+                    <button class="filter-btn" data-filter="custom">Custom</button>
+                </div>
+                <div class="filter-custom" id="filterCustom" style="display:none; gap: 8px; align-items: center;">
+                    <input type="date" id="start-date" class="date-input">
+                    <span class="date-sep">→</span>
+                    <input type="date" id="end-date" class="date-input">
+                    <button class="apply-btn" id="apply-btn">Apply</button>
+                </div>
+            </div>
+            <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+                <button class="search-btn" id="searchBtn">Search</button>
+            </div>
+        </div>
+
+        <!-- Pages (only one visible at a time) -->
+        <div id="page-dashboard" class="page active">
+            <h1 class="section-title">Dashboard</h1>
+            
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Listening Time</div>
+                    <div class="stat-value" id="listening-time">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Streams</div>
+                    <div class="stat-value" id="total-streams">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Artists</div>
+                    <div class="stat-value" id="unique-artists">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Tracks</div>
+                    <div class="stat-value" id="unique-tracks">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Albums</div>
+                    <div class="stat-value" id="unique-albums">Loading...</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div>
+                    <h2 class="section-title">Top Tracks</h2>
+                    <table class="data-table">
+                        <thead><tr>
+                            <th>#</th><th>Title</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th>
+                        </tr></thead>
+                        <tbody id="dash-tracks-list"></tbody>
+                    </table>
+                    <button class="dashboard-more-btn" onclick="navigateTo('tracks')">Show more</button>
+                </div>
+                <div>
+                    <h2 class="section-title">Top Artists</h2>
+                    <table class="data-table">
+                        <thead><tr>
+                            <th>#</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th>
+                        </tr></thead>
+                        <tbody id="dash-artists-list"></tbody>
+                    </table>
+                    <button class="dashboard-more-btn" onclick="navigateTo('artists')">Show more</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-search" class="page">
+            <!-- Landing state: shown before first search -->
+            <div id="search-landing" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 24px;">
+                <h1 class="section-title" style="font-size: 1.8rem;">Search</h1>
+                <div class="search-input-wrap" style="width: 100%; max-width: 500px; height: 44px;">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInputLanding" class="search-input" placeholder="Search artists, tracks, albums…" style="font-size: 1rem;">
+                    <button class="search-btn" id="searchBtnLanding">Search</button>
+                </div>
+            </div>
+            
+            <!-- Results state: shown after search -->
+            <div id="search-results" style="display: none;">
+                <h1 class="section-title" id="search-title">Search Results</h1>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+                    <button id="search-nav-artists" class="filter-btn" onclick="document.getElementById('search-sec-artists').scrollIntoView({behavior: 'smooth', block: 'start'})">Artists (0)</button>
+                    <button id="search-nav-tracks" class="filter-btn" onclick="document.getElementById('search-sec-tracks').scrollIntoView({behavior: 'smooth', block: 'start'})">Tracks (0)</button>
+                    <button id="search-nav-albums" class="filter-btn" onclick="document.getElementById('search-sec-albums').scrollIntoView({behavior: 'smooth', block: 'start'})">Albums (0)</button>
+                </div>
+
+            <div id="search-sec-artists" style="margin-bottom: 40px;">
+                <h2 class="section-title">Artists</h2>
+                <table class="data-table">
+                    <thead><tr><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th></tr></thead>
+                    <tbody id="search-artists-list"></tbody>
+                </table>
+                <button class="dashboard-more-btn" id="search-more-artists">Show more artists</button>
+            </div>
+            
+            <div id="search-sec-tracks" style="margin-bottom: 40px;">
+                <h2 class="section-title">Tracks</h2>
+                <table class="data-table">
+                    <thead><tr><th>Title</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th></tr></thead>
+                    <tbody id="search-tracks-list"></tbody>
+                </table>
+                <button class="dashboard-more-btn" id="search-more-tracks">Show more tracks</button>
+            </div>
+            
+            <div id="search-sec-albums" style="margin-bottom: 40px;">
+                <h2 class="section-title">Albums</h2>
+                <table class="data-table">
+                    <thead><tr><th>Album</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th></tr></thead>
+                    <tbody id="search-albums-list"></tbody>
+                </table>
+                <button class="dashboard-more-btn" id="search-more-albums">Show more albums</button>
+            </div>
+            </div>
+        </div>
+
+        <div id="page-tracks" class="page">
+            <h1 class="section-title">Top Tracks</h1>
+            <table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Title</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th>
+                </tr></thead>
+                <tbody id="page-tracks-list"></tbody>
+            </table>
+            <button id="more-tracks-btn" class="dashboard-more-btn" style="margin-top: 10px;">Load more</button>
+        </div>
+
+        <div id="page-artists" class="page">
+            <h1 class="section-title">Top Artists</h1>
+            <table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th>
+                </tr></thead>
+                <tbody id="page-artists-list"></tbody>
+            </table>
+            <button id="more-artists-btn" class="dashboard-more-btn" style="margin-top: 10px;">Load more</button>
+        </div>
+
+        <div id="page-albums" class="page">
+            <h1 class="section-title">Top Albums</h1>
+            <table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Album</th><th>Artist</th><th class="number-cell">Plays</th><th class="time-cell">Listening Time</th>
+                </tr></thead>
+                <tbody id="page-albums-list"></tbody>
+            </table>
+            <button id="more-albums-btn" class="dashboard-more-btn" style="margin-top: 10px;">Load more</button>
+        </div>
+
+        <div id="page-import" class="page">
+            <h1 class="section-title">Imports & Database Selection</h1>
+            <div class="import-page-grid">
+                <!-- NEW: Import Data Section -->
+                <div class="imported-files-container" style="margin-bottom: 32px;">
+                    <h2 class="section-title">Import new data</h2>
+                    <p class="import-hint">Import your Spotify or Deezer streaming history to create a new database.</p>
+                    
+                    <div class="drop-zone" id="drop-zone">
+                    <div class="drop-zone-icon">📁</div>
+                    <div class="drop-zone-text">Drag & drop your files or folder here</div>
+                    <div class="drop-zone-sub">
+                        <span class="clickable-link" id="browse-files">Click to browse files</span> or 
+                        <span class="clickable-link" id="browse-folder">browse folder</span>
+                    </div>
+                    <input type="file" id="file-input" multiple accept=".json,.xlsx,.zip" style="display: none;">
+                    <input type="file" id="folder-input" webkitdirectory directory style="display: none;">
+                </div>
+                    
+                    <div id="staged-files" class="staged-files-list"></div>
+                    
+                    <div class="create-db-area" id="create-db-area" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <label for="new-db-name" style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Database Name</label>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <div class="search-input-wrap" style="width: 100%; max-width: 500px;">
+                                    <span class="search-icon">📁</span>
+                                    <input type="text" id="new-db-name" class="search-input" placeholder="Enter DataBase name...">
+                                    <button class="search-btn" id="create-db-btn" style="padding: 0 24px;">Create Database</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing: Database Selection Section -->
+                <div class="imported-files-container">
+                    <h2 class="section-title">Available Databases</h2>
+                    <div class="imported-files-list" id="db-list">
+                        <div class="no-data">Loading databases...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!--Link to js file -->
+    <script src="app.js"></script>
+</body>
+</html>
