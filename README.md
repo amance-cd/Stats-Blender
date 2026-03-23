@@ -15,11 +15,13 @@ In a terminal window enter :
 
 git clone https://github.com/amance-cd/Stats-Blender.git
 
-cd Stats-Blender/v4 
+then if you're on MacOS :
+cd Stats-Blender/v4 && ./start.sh
+
+or if you're on Windows :
+cd Stats-Blender/v4 && start.bat
 
 (or cd Stats-Blender/v3 if you want to use the original interface) 
-
-Then click on start.bat (on Windows) / start.sh (on MacOS)
 
 To discover using the app, a sample history is already loaded, allowing you to see how the app works without having to load your own history. You can use any feature with this sample history, browsing tracks, artists, and albums stats using the search tool, and selecting different time periods. 
 
