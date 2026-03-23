@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Stats-Blender</title>
+    <!--Link to css file --> 
+    <link rel="stylesheet" href="style.css"> 
+</head>
+
+<body>
+    <h1>Stats Blender</h1>
+    <h4>By Amance</h4>
+
+    <div class="filters-container">
+        <div>
+            <label for="sort-param">Sort by:</label>
+            <select id="sort-param">
+                <option value="0">Listening Time</option>
+                <option value="1">Play Count</option>
+            </select>
+        </div>
+        <div>
+            <label for="start-date">From:</label>
+            <input type="date" id="start-date">
+        </div>
+        <div>
+            <label for="end-date">To:</label>
+            <input type="date" id="end-date">
+        </div>
+        <button id="apply-btn">Apply Filters</button>
+    </div>
+
+    <div class="stats-container">
+        <h2>General Statistics</h2>
+        <p>Total listening time: <strong id="listening-time">Loading...</strong></p>
+        <p>Total streams: <strong id="total-streams">Loading...</strong></p>
+    </div>
+
+    <div class="top-list-container">
+        <h2>Top Tracks 🎵</h2>
+        <div class="list-header tracks-grid">
+            <span class="col-rank">#</span>
+            <span class="col-title">Title</span>
+            <span class="col-artist">Artist</span>
+            <span class="col-plays">Plays</span>
+            <span class="col-time">Listening Time</span>
+        </div>
+        <ul id="top-tracks-list" class="grid-list">
+            <li class="grid-row tracks-grid">Loading...</li>
+        </ul>
+        <button id="more-tracks-btn" class="see-more-btn">See more</button>
+    </div>
+
+    <div class="top-list-container">
+        <h2>Top Artists 🧑‍🎤</h2>
+        <div class="list-header artists-grid">
+            <span class="col-rank">#</span>
+            <span class="col-artist">Artist</span>
+            <span class="col-plays">Plays</span>
+            <span class="col-time">Listening Time</span>
+        </div>
+        <ul id="top-artists-list" class="grid-list">
+            <li class="grid-row artists-grid">Loading...</li>
+        </ul>
+        <button id="more-artists-btn" class="see-more-btn">See more</button>
+    </div>
+
+    <div class="top-list-container">
+        <h2>Top Albums 💿</h2>
+        <div class="list-header albums-grid">
+            <span class="col-rank">#</span>
+            <span class="col-album">Album</span>
+            <span class="col-artist">Artist</span>
+            <span class="col-plays">Plays</span>
+            <span class="col-time">Listening Time</span>
+        </div>
+        <ul id="top-albums-list" class="grid-list">
+            <li class="grid-row albums-grid">Loading...</li>
+        </ul>
+        <button id="more-albums-btn" class="see-more-btn">See more</button>
+    </div>
+
+    <!--Link to js file -->
+    <script src="app.js"></script>
+</body>
+</html>

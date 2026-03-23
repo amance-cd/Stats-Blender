@@ -1,0 +1,129 @@
+body {
+    background-color: #181818; /* Spotify background color */
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 50px;
+}
+
+/* Container for each top list */
+.top-list-container {
+    background-color: #282828;
+    padding: 24px;
+    border-radius: 12px;
+    margin-top: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.top-list-container h2 {
+    border-bottom: 1px solid #404040;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+}
+
+/* Columns styling */
+.list-header {
+    display: grid;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #a7a7a7;
+    border-bottom: 1px solid #404040;
+    margin-bottom: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.grid-row {
+    display: grid;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    transition: background-color 0.2s ease;
+    color: #EBEBEB;
+    align-items: center;
+}
+
+.grid-row:hover {
+    background-color: #3E3E3E;
+    color: white;
+    cursor: default;
+}
+
+/* Specific templates for the 3 lists */
+.tracks-grid { grid-template-columns: 40px 3fr 2fr 1fr 1.5fr; gap: 10px; }
+.artists-grid { grid-template-columns: 40px 4fr 1fr 1.5fr; gap: 10px; }
+.albums-grid { grid-template-columns: 40px 3fr 2fr 1fr 1.5fr; gap: 10px; }
+
+/* In CSS, ol padding might not be needed if we remove default list styles */
+.grid-list {
+    list-style: none; /* We remove the default 1. 2. 3. because we will draw them in JS */
+    padding: 0;
+    margin: 0;
+}
+
+.col-rank { color: #b582b5; font-weight: bold; }
+.col-time, .col-plays { color: #a7a7a7; font-size: 0.9em; }
+
+/* Filters */
+.filters-container {
+    background-color: #282828;
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.filters-container label {
+    color: #ffffff;
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.filters-container select,
+.filters-container input {
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    background-color: #121212;
+    color: white;
+    font-family: inherit;
+}
+
+#apply-btn {
+    background-color: #b582b5; /* Stats Blender secondary color */
+    color: black;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-left: auto; /* Pushes the button to the right */
+}
+
+#apply-btn:hover {
+    transform: scale(1.05); /* Pop-up on hover */
+}
+
+/* See More buttons */
+.see-more-btn {
+    background-color: transparent;
+    color: #b582b5;
+    border: 1px solid #b582b5;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.2s;
+    display: block;
+    width: 100%;
+}
+
+.see-more-btn:hover {
+    background-color: #b582b5;
+    color: black;
+}
