@@ -17,7 +17,7 @@ function slugify(text) {
 let currentPage = "dashboard";
 let previousPage = "dashboard";
 
-// Helper: split "Artist1, Artist2" into clickable links
+//Helper: split "Artist1, Artist2" into clickable links
 function makeArtistLinks(artistStr) {
     if (!artistStr) return "";
     return artistStr.split(", ").map(name => 
@@ -25,7 +25,7 @@ function makeArtistLinks(artistStr) {
     ).join(", ");
 }
 
-// Helper: render a stats grid (v5 style)
+//Helper: render a stats grid
 function renderStatGrid(stats) {
     if (!stats) return "";
     return `
@@ -50,7 +50,7 @@ function renderStatGrid(stats) {
     `;
 }
 
-// Open a pinned artist detail page
+//Open a pinned artist detail page
 async function openArtistPage(name) {
     const pageId = `artist-${slugify(name)}`;
     
@@ -85,7 +85,7 @@ async function openArtistPage(name) {
         
         html += `<div class="dashboard-grid">`;
         
-        // Top Tracks
+        //Top Tracks
         html += `<div>
             <h2 class="section-title">Top Tracks</h2>
             <table class="data-table"><thead><tr><th>#</th><th>Title</th><th class="number-cell">Plays</th><th class="time-cell">Time</th></tr></thead><tbody>`;
@@ -97,7 +97,7 @@ async function openArtistPage(name) {
             <button class="dashboard-more-btn" onclick="openPinnedSearch('${data.name.replace(/'/g, "\\'")}', 'tracks')">Show More</button>
         </div>`;
         
-        // Top Albums
+        //Top Albums
         html += `<div>
             <h2 class="section-title">Top Albums</h2>
             <table class="data-table"><thead><tr><th>#</th><th>Album</th><th class="number-cell">Plays</th><th class="time-cell">Time</th></tr></thead><tbody>`;
@@ -109,7 +109,7 @@ async function openArtistPage(name) {
             <button class="dashboard-more-btn" onclick="openPinnedSearch('${data.name.replace(/'/g, "\\'")}', 'albums')">Show More</button>
         </div>`;
         
-        html += `</div>`; // Close dashboard-grid
+        html += `</div>`; //Close dashboard-grid
         
         pageDiv.innerHTML = html;
     } catch (e) {
@@ -118,7 +118,7 @@ async function openArtistPage(name) {
     }
 }
 
-// Open a pinned album detail page
+//Open a pinned album detail page
 async function openAlbumPage(name) {
     const pageId = `album-${slugify(name)}`;
     
@@ -168,7 +168,7 @@ async function openAlbumPage(name) {
     }
 }
 
-// Shared function: add a pinned item to sidebar
+//Add a pinned item to sidebar
 function addPinnedLink(pageId, icon, label) {
     const pinnedContainer = document.getElementById("pinnedSearches");
 
@@ -219,23 +219,23 @@ function navigateTo(page) {
         currentPage = page;
     }
     
-    // Update nav links
+    //Update nav links
     document.querySelectorAll(".nav-link").forEach(link => {
         link.classList.toggle("active", link.dataset.page === page);
     });
 
-    // Show/hide pages
+    //Show/hide pages
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     const target = document.getElementById(`page-${page}`);
     if (target) target.classList.add("active");
     
-    // Hide topBar on import page
+    //Hide topBar on import page
     const topBar = document.getElementById("topBar");
     if (topBar) {
         topBar.style.display = (page === "import" ? "none" : "flex");
     }
 
-    // Auto-focus search input when navigating to search page
+    //Auto-focus search input when navigating to search page
     if (page === "search") {
         const landing = document.getElementById("search-landing");
         if (landing && landing.style.display !== "none") {
@@ -243,7 +243,7 @@ function navigateTo(page) {
         }
     }
     
-    // Smooth scroll to top
+    //Smooth scroll to top
     window.scrollTo(0, 0);
 
     if (page === "import") {
@@ -297,7 +297,6 @@ async function renderImportPage() {
             `;
         }).join("");
 
-        // NEW: Initialize File Import UI
         initImportDropZone();
 
     } catch (e) {
@@ -305,10 +304,9 @@ async function renderImportPage() {
     }
 }
 
-let stagedFilesMap = new Map(); // Key: name-size, Value: File object
+let stagedFilesMap = new Map(); //Key: name-size, Value: File object
 
 function initImportDropZone() {
-    // ... items as before ...
     const dropZone = document.getElementById("drop-zone");
     const fileInput = document.getElementById("file-input");
     const folderInput = document.getElementById("folder-input");
@@ -318,7 +316,7 @@ function initImportDropZone() {
     
     if (!dropZone || !fileInput || !folderInput) return;
 
-    // Click handlers
+    //Click handlers
     if (browseFiles) browseFiles.onclick = (e) => { e.stopPropagation(); fileInput.click(); };
     if (browseFolder) browseFolder.onclick = (e) => { e.stopPropagation(); folderInput.click(); };
     dropZone.onclick = (e) => { if (e.target !== browseFiles && e.target !== browseFolder) fileInput.click(); };
@@ -326,7 +324,7 @@ function initImportDropZone() {
     fileInput.onchange = () => { handleFiles(fileInput.files); fileInput.value = ""; };
     folderInput.onchange = () => { handleFiles(folderInput.files); folderInput.value = ""; };
 
-    // Drag & Drop
+    //Drag & Drop
     dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add("dragover"); };
     dropZone.ondragleave = () => dropZone.classList.remove("dragover");
     dropZone.ondrop = (e) => {
@@ -353,7 +351,7 @@ function initImportDropZone() {
                 return;
             }
 
-            // UI: Loading state
+            //UI: Loading state
             const originalText = createBtn.innerText;
             createBtn.disabled = true;
             createBtn.innerText = "Creating & Importing... (this may take a few minutes)";
@@ -394,7 +392,7 @@ function initImportDropZone() {
                         } else if (line.startsWith("ERROR:")) {
                             alert(`Error: ${line.replace("ERROR:", "")}`);
                         } else {
-                            // Update progress text
+                            //Update progress text
                             createBtn.innerText = line;
                         }
                     }
@@ -461,8 +459,8 @@ function handleFiles(files) {
         const isAudio = name.includes("Streaming_History_Audio");
         const isXlsx = name.toLowerCase().endsWith(".xlsx");
 
-        // Filter: Only .json files (Spotify) OR .xlsx files (Deezer)
-        // CRITICAL: Filter out macOS metadata files starting with ._
+        //Filter: Only .json files (Spotify) OR .xlsx files (Deezer)
+        //CRITICAL: Filter out macOS metadata files starting with ._
         if (name.startsWith("._")) continue;
         if (!isXlsx && (!isJson || !isAudio)) continue;
         

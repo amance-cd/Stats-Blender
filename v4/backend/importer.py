@@ -189,24 +189,22 @@ def deezer_api_and_insert(data):
         futures = {executor.submit(fetch_isrc, isrc): isrc for isrc in isrcs_to_search}
         
         j = 0
-        total = len(isrcs_to_search) # Baser la progression sur la vraie cible, bien plus stable visuellement
+        total = len(isrcs_to_search)
         for i, future in enumerate(concurrent.futures.as_completed(futures)):
             isrc, items = future.result()
-            
-            # Affichage fluide directement sur la ligne : 1% 2% 3% ... 
-            progress = min(100, round((i + 1) / total * 100))
+            progress = min(100, round((i + 1) / total * 100)) #print progress % by %
             if progress > j:
                 yield "Deezer history progress: " + str(progress) + "%" 
                 j = progress
                 
-            if not items: # S'il renvoie [ ] on zape
+            if not items:
                 continue
                 
             best_track = None
             best_score = -1
             best_tracks_count = -1
             
-            # Choosing the most appropriate version of the track
+            #Choosing the most appropriate version of the track
             for track in items:
                 if track['external_ids'].get('isrc') != isrc: #Checking if the isrcs match
                     continue
@@ -222,7 +220,7 @@ def deezer_api_and_insert(data):
                     
             if best_track:
                 if isrc in db_isrc_info:
-                    old_score = type_score.get(db_isrc_info[isrc], 0) # Utilise ta nouvelle modification "db_isrc_info[isrc]" qui est une string
+                    old_score = type_score.get(db_isrc_info[isrc], 0)
                     if best_score > old_score: #Comparing the new version with the one present in the DB
                         isrc_winners[isrc] = best_track
                 else: 
@@ -274,7 +272,7 @@ def deduplicate_albums():
         'expansion', 'deluxe', 'bonus', 'extended', 'edition', 'édition', 'version', 
         'remastered', 'remaster', 'long', 'bed', 
         'epilogue', 'boost', 'réédition', 'anniversary', 'track', 
-        'tracks', 'taylors', 'taylor', 'pt', 'part', 'vol', 'volume'}
+        'tracks', 'pt', 'part', 'vol', 'volume'}
     
     albums_to_merge = []
     for artist_id, album_list in artist_albums.items():
@@ -321,7 +319,7 @@ def deduplicate_albums():
     print(f"{len(albums_to_merge)} albums cleaned up")
 
 def run_import(db_name, source_folder, source_type=None):
-    """Programmatic entry point for the web API - now supports mixed sources"""
+    """Import fules and insert data in the DB"""
     from database import set_db_name, init_db
     
     if not db_name.endswith(".db"):

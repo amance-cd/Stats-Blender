@@ -9,7 +9,7 @@ def set_db_name(name: str):
 
 def get_connection():
     """Opens a connection to the database"""
-    # Look for the DB in the same directory as this file
+    #Look for the DB in the same directory as this file
     base_dir = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(base_dir, DB_NAME)
     conn = sqlite3.connect(db_path)

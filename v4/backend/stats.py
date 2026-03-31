@@ -364,7 +364,7 @@ def search(q, limit=10):
     conn = get_connection()
     q_wild = f"%{q}%"
     
-    # Tracks: match by title, main artist, featuring artist, or album name
+    #Tracks: match by title, main artist, featuring artist, or album name
     query_tracks = f'''
         WITH track_artists_concat AS (
             SELECT 
@@ -397,7 +397,7 @@ def search(q, limit=10):
         df_tracks['total_ms'] = df_tracks['total_ms'].fillna(0)
         df_tracks['listening_time'] = df_tracks['total_ms'].apply(format_time)
     
-    # Artists: match by name (includes featuring artists via track_all_artists)
+    #Artists: match by name (includes featuring artists)
     query_artists = f'''
         WITH track_all_artists AS (
             SELECT isrc AS track_isrc, artist_id FROM tracks
@@ -418,7 +418,7 @@ def search(q, limit=10):
         df_artists['total_ms'] = df_artists['total_ms'].fillna(0)
         df_artists['listening_time'] = df_artists['total_ms'].apply(format_time)
     
-    # Albums: match by album name or artist name
+    #Albums: match by album name or artist name
     query_albums = f'''
         SELECT al.name as name, a.name as artist, SUM(p.ms_played) as total_ms, COUNT(p.track_isrc) as play_count
         FROM albums al
