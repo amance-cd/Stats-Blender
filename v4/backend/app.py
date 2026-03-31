@@ -27,17 +27,25 @@ app = FastAPI(
     version="3.0.0"
 )
 
+# CORS: allow frontend origins (configurable for deployment)
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 backend_dir = os.path.dirname(os.path.abspath(__file__))
+db_dir = os.getenv("DATABASE_DIR", backend_dir)
 
 # API Routes start here
+
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint for deployment monitoring"""
+    return {"status": "ok"}
 
 @app.get("/api/stats/general")
 def get_general(
@@ -157,13 +165,11 @@ def get_album_detail(
 @app.get("/api/databases")
 def list_databases():
     """List all available database files with metadata"""
-    import os
     import time
-    backend_dir = os.path.dirname(os.path.abspath(__file__))
     dbs = []
-    for f in os.listdir(backend_dir):
+    for f in os.listdir(db_dir):
         if f.endswith(".db"):
-            path = os.path.join(backend_dir, f)
+            path = os.path.join(db_dir, f)
             stat = os.stat(path)
             dbs.append({
                 "name": f,
@@ -185,7 +191,7 @@ async def select_database(data: dict):
     if not name or not name.endswith(".db"):
         return {"error": "Invalid database name"}
     
-    db_path = os.path.join(backend_dir, name)
+    db_path = os.path.join(db_dir, name)
     if not os.path.exists(db_path):
         return {"error": "Database file not found"}
     
@@ -198,7 +204,7 @@ def delete_database(name: str):
     if name == database.DB_NAME:
         return {"success": False, "error": "Cannot delete current database"}
     
-    db_path = os.path.join(backend_dir, name)
+    db_path = os.path.join(db_dir, name)
     if not os.path.exists(db_path):
         return {"success": False, "error": "Database not found"}
     
@@ -234,7 +240,7 @@ async def create_database(name: str = Form(...), files: List[UploadFile] = File(
             yield f"DONE:{safe_name}\n"
         except Exception as e:
             # Cleanup if failed
-            db_path = os.path.join(backend_dir, safe_name)
+            db_path = os.path.join(db_dir, safe_name)
             if os.path.exists(db_path):
                 os.remove(db_path)
             yield f"ERROR:{str(e)}\n"
@@ -247,7 +253,7 @@ async def append_database(name: str = Form(...), files: List[UploadFile] = File(
     if not name.endswith(".db"):
         name += ".db"
         
-    db_path = os.path.join(backend_dir, name)
+    db_path = os.path.join(db_dir, name)
     if not os.path.exists(db_path):
         async def err(): yield f"ERROR:Database {name} not found\n"
         return StreamingResponse(err(), media_type="text/plain")
@@ -276,5 +282,5 @@ app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
-    # Lance le serveur API local
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

@@ -2,6 +2,9 @@ import sqlite3
 import os
 
 DB_NAME = "stats-blender_test.db"
+# Allow overriding the database directory via environment variable
+# (useful for deployment where persistent storage is at a different path)
+DB_DIR = os.getenv("DATABASE_DIR", os.path.dirname(os.path.abspath(__file__)))
 
 def set_db_name(name: str):
     global DB_NAME
@@ -9,9 +12,7 @@ def set_db_name(name: str):
 
 def get_connection():
     """Opens a connection to the database"""
-    #Look for the DB in the same directory as this file
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(base_dir, DB_NAME)
+    db_path = os.path.join(DB_DIR, DB_NAME)
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
