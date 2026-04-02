@@ -367,14 +367,31 @@ function initImportDropZone() {
                     body: formData
                 });
 
-                const data = await response.json();
+                const responseText = await response.text();
+                console.log("Server response:", responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseErr) {
+                    console.error("Response is not JSON:", responseText);
+                    alert(`Server returned invalid response: ${responseText.substring(0, 200)}`);
+                    createBtn.disabled = false;
+                    createBtn.innerText = originalText;
+                    createBtn.style.opacity = "1";
+                    return;
+                }
 
                 if (data.error) {
                     alert(`Error: ${data.error}`);
+                    createBtn.disabled = false;
+                    createBtn.innerText = originalText;
+                    createBtn.style.opacity = "1";
                     return;
                 }
 
                 // Poll for progress
+                console.log("Starting polling with task_id:", data.task_id);
                 const taskId = data.task_id;
                 const pollInterval = setInterval(async () => {
                     try {
