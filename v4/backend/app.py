@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from typing import List, Optional
 import stats
@@ -214,67 +214,85 @@ def delete_database(name: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+import threading
+import uuid
+
+# Track import progress for polling (replaces StreamingResponse for WSGI compatibility)
+import_tasks = {}
+
+def run_import_task(task_id, db_name, temp_dir, is_append=False):
+    """Runs import in background thread, updates import_tasks with progress"""
+    try:
+        for progress in importer.run_import(db_name, temp_dir):
+            import_tasks[task_id]["progress"] = progress
+        import_tasks[task_id]["status"] = "done"
+        import_tasks[task_id]["progress"] = f"DONE:{db_name}"
+    except Exception as e:
+        import_tasks[task_id]["status"] = "error"
+        import_tasks[task_id]["progress"] = f"ERROR:{str(e)}"
+        if not is_append:
+            cleanup_path = os.path.join(db_dir, db_name)
+            if os.path.exists(cleanup_path):
+                os.remove(cleanup_path)
+
+@app.get("/api/import/status/{task_id}")
+def get_import_status(task_id: str):
+    """Poll this endpoint to get import progress"""
+    task = import_tasks.get(task_id)
+    if not task:
+        return {"error": "Task not found"}
+    return {"status": task["status"], "progress": task["progress"]}
+
 @app.post("/api/databases/create")
 async def create_database(name: str = Form(...), files: List[UploadFile] = File(...)):
-    """Creates a new database from uploaded files with real-time progress"""
+    """Creates a new database from uploaded files (background task + polling)"""
     safe_name = name.strip()
     if not safe_name.endswith(".db"):
         safe_name += ".db"
-        
-    async def generate_progress():
-        try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                for file in files:
-                    file_path = os.path.join(temp_dir, file.filename)
-                    with open(file_path, "wb") as buffer:
-                        shutil.copyfileobj(file.file, buffer)
-                
-                # Detect source type
-                is_deezer = any(f.filename.lower().endswith(".xlsx") for f in files)
-                source_type = "deezer" if is_deezer else "spotify"
-                
-                # run_import is now a generator
-                for progress in importer.run_import(safe_name, temp_dir):
-                    yield f"{progress}\n"
-                    
-            yield f"DONE:{safe_name}\n"
-        except Exception as e:
-            # Cleanup if failed
-            db_path = os.path.join(db_dir, safe_name)
-            if os.path.exists(db_path):
-                os.remove(db_path)
-            yield f"ERROR:{str(e)}\n"
 
-    return StreamingResponse(generate_progress(), media_type="text/plain")
+    # Save uploaded files to a persistent temp directory
+    temp_dir = tempfile.mkdtemp()
+    for file in files:
+        file_path = os.path.join(temp_dir, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+    # Start import in background thread
+    task_id = str(uuid.uuid4())
+    import_tasks[task_id] = {"status": "running", "progress": "Starting import..."}
+
+    thread = threading.Thread(target=run_import_task, args=(task_id, safe_name, temp_dir, False))
+    thread.daemon = True
+    thread.start()
+
+    return {"task_id": task_id}
 
 @app.post("/api/databases/append")
 async def append_database(name: str = Form(...), files: List[UploadFile] = File(...)):
-    """Appends files to an existing database with real-time progress"""
+    """Appends files to an existing database (background task + polling)"""
     if not name.endswith(".db"):
         name += ".db"
-        
+
     db_path = os.path.join(db_dir, name)
     if not os.path.exists(db_path):
-        async def err(): yield f"ERROR:Database {name} not found\n"
-        return StreamingResponse(err(), media_type="text/plain")
+        return {"error": f"Database {name} not found"}
 
-    async def generate_progress():
-        try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                for file in files:
-                    file_path = os.path.join(temp_dir, file.filename)
-                    with open(file_path, "wb") as buffer:
-                        shutil.copyfileobj(file.file, buffer)
-                
-                # run_import handles everything
-                for progress in importer.run_import(name, temp_dir):
-                    yield f"{progress}\n"
-                    
-            yield f"DONE:{name}\n"
-        except Exception as e:
-            yield f"ERROR:{str(e)}\n"
+    # Save uploaded files to a persistent temp directory
+    temp_dir = tempfile.mkdtemp()
+    for file in files:
+        file_path = os.path.join(temp_dir, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    return StreamingResponse(generate_progress(), media_type="text/plain")
+    # Start import in background thread
+    task_id = str(uuid.uuid4())
+    import_tasks[task_id] = {"status": "running", "progress": "Starting import..."}
+
+    thread = threading.Thread(target=run_import_task, args=(task_id, name, temp_dir, True))
+    thread.daemon = True
+    thread.start()
+
+    return {"task_id": task_id}
 
 # Serve frontend (must be at the end to not shadow /api routes)
 frontend_dir = os.path.join(os.path.dirname(backend_dir), "frontend")

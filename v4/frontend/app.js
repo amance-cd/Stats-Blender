@@ -367,36 +367,46 @@ function initImportDropZone() {
                     body: formData
                 });
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let done = false;
+                const data = await response.json();
 
-                while (!done) {
-                    const { value, done: readerDone } = await reader.read();
-                    if (readerDone) break;
-                    
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split("\n");
-
-                    for (const line of lines) {
-                        if (!line) continue;
-                        
-                        if (line.startsWith("DONE:")) {
-                            const dbName = line.replace("DONE:", "");
-                            alert(`Database "${dbName}" created and imported successfully!`);
-                            stagedFilesMap.clear();
-                            nameInput.value = "";
-                            renderStagedFiles();
-                            await renderImportPage();
-                            location.reload();
-                        } else if (line.startsWith("ERROR:")) {
-                            alert(`Error: ${line.replace("ERROR:", "")}`);
-                        } else {
-                            //Update progress text
-                            createBtn.innerText = line;
-                        }
-                    }
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                    return;
                 }
+
+                // Poll for progress
+                const taskId = data.task_id;
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetch(`/api/import/status/${taskId}`);
+                        const status = await statusRes.json();
+
+                        if (status.progress) {
+                            if (status.progress.startsWith("DONE:")) {
+                                clearInterval(pollInterval);
+                                const dbName = status.progress.replace("DONE:", "");
+                                alert(`Database "${dbName}" created and imported successfully!`);
+                                stagedFilesMap.clear();
+                                nameInput.value = "";
+                                renderStagedFiles();
+                                await renderImportPage();
+                                location.reload();
+                            } else if (status.progress.startsWith("ERROR:")) {
+                                clearInterval(pollInterval);
+                                alert(`Error: ${status.progress.replace("ERROR:", "")}`);
+                            } else {
+                                createBtn.innerText = status.progress;
+                            }
+                        }
+
+                        if (status.status === "done" || status.status === "error") {
+                            clearInterval(pollInterval);
+                        }
+                    } catch (e) {
+                        console.error("Poll error:", e);
+                    }
+                }, 1000);
+
             } catch (e) {
                 console.error("Upload Error:", e);
                 alert(`Upload failed: ${e.message}`);
@@ -607,30 +617,44 @@ async function appendDatabase(dbName, files) {
             body: formData
         });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const lines = chunk.split("\n");
-            for (const line of lines) {
-                if (!line) continue;
-                if (line.startsWith("DONE:")) {
-                    alert(`Files successfully added to "${dbName}"!`);
-                    renderImportPage();
-                    if (document.querySelector(`.db-card.active .db-name`)?.innerText === dbName) {
-                        location.reload(); 
-                    }
-                } else if (line.startsWith("ERROR:")) {
-                    alert(`Error: ${line.replace("ERROR:", "")}`);
-                } else if (btn) {
-                    btn.innerText = line;
-                }
-            }
+        const data = await response.json();
+
+        if (data.error) {
+            alert(`Error: ${data.error}`);
+            return;
         }
+
+        // Poll for progress
+        const taskId = data.task_id;
+        const pollInterval = setInterval(async () => {
+            try {
+                const statusRes = await fetch(`/api/import/status/${taskId}`);
+                const status = await statusRes.json();
+
+                if (status.progress) {
+                    if (status.progress.startsWith("DONE:")) {
+                        clearInterval(pollInterval);
+                        alert(`Files successfully added to "${dbName}"!`);
+                        renderImportPage();
+                        if (document.querySelector(`.db-card.active .db-name`)?.innerText === dbName) {
+                            location.reload();
+                        }
+                    } else if (status.progress.startsWith("ERROR:")) {
+                        clearInterval(pollInterval);
+                        alert(`Error: ${status.progress.replace("ERROR:", "")}`);
+                    } else if (btn) {
+                        btn.innerText = status.progress;
+                    }
+                }
+
+                if (status.status === "done" || status.status === "error") {
+                    clearInterval(pollInterval);
+                }
+            } catch (e) {
+                console.error("Poll error:", e);
+            }
+        }, 1000);
+
     } catch (e) {
         console.error("Append Error:", e);
         alert(`Append failed: ${e.message}`);
