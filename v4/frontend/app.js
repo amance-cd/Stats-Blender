@@ -384,6 +384,9 @@ function initImportDropZone() {
                         if (status.progress) {
                             if (status.progress.startsWith("DONE:")) {
                                 clearInterval(pollInterval);
+                                createBtn.disabled = false;
+                                createBtn.innerText = originalText;
+                                createBtn.style.opacity = "1";
                                 const dbName = status.progress.replace("DONE:", "");
                                 alert(`Database "${dbName}" created and imported successfully!`);
                                 stagedFilesMap.clear();
@@ -393,6 +396,9 @@ function initImportDropZone() {
                                 location.reload();
                             } else if (status.progress.startsWith("ERROR:")) {
                                 clearInterval(pollInterval);
+                                createBtn.disabled = false;
+                                createBtn.innerText = originalText;
+                                createBtn.style.opacity = "1";
                                 alert(`Error: ${status.progress.replace("ERROR:", "")}`);
                             } else {
                                 createBtn.innerText = status.progress;
@@ -401,6 +407,9 @@ function initImportDropZone() {
 
                         if (status.status === "done" || status.status === "error") {
                             clearInterval(pollInterval);
+                            createBtn.disabled = false;
+                            createBtn.innerText = originalText;
+                            createBtn.style.opacity = "1";
                         }
                     } catch (e) {
                         console.error("Poll error:", e);
@@ -410,7 +419,6 @@ function initImportDropZone() {
             } catch (e) {
                 console.error("Upload Error:", e);
                 alert(`Upload failed: ${e.message}`);
-            } finally {
                 createBtn.disabled = false;
                 createBtn.innerText = originalText;
                 createBtn.style.opacity = "1";
@@ -634,6 +642,7 @@ async function appendDatabase(dbName, files) {
                 if (status.progress) {
                     if (status.progress.startsWith("DONE:")) {
                         clearInterval(pollInterval);
+                        if (btn) { btn.disabled = false; btn.innerText = originalText; btn.style.width = ""; btn.style.padding = ""; }
                         alert(`Files successfully added to "${dbName}"!`);
                         renderImportPage();
                         if (document.querySelector(`.db-card.active .db-name`)?.innerText === dbName) {
@@ -641,6 +650,7 @@ async function appendDatabase(dbName, files) {
                         }
                     } else if (status.progress.startsWith("ERROR:")) {
                         clearInterval(pollInterval);
+                        if (btn) { btn.disabled = false; btn.innerText = originalText; btn.style.width = ""; btn.style.padding = ""; }
                         alert(`Error: ${status.progress.replace("ERROR:", "")}`);
                     } else if (btn) {
                         btn.innerText = status.progress;
@@ -649,6 +659,7 @@ async function appendDatabase(dbName, files) {
 
                 if (status.status === "done" || status.status === "error") {
                     clearInterval(pollInterval);
+                    if (btn) { btn.disabled = false; btn.innerText = originalText; btn.style.width = ""; btn.style.padding = ""; }
                 }
             } catch (e) {
                 console.error("Poll error:", e);
@@ -658,13 +669,7 @@ async function appendDatabase(dbName, files) {
     } catch (e) {
         console.error("Append Error:", e);
         alert(`Append failed: ${e.message}`);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = originalText;
-            btn.style.width = "";
-            btn.style.padding = "";
-        }
+        if (btn) { btn.disabled = false; btn.innerText = originalText; btn.style.width = ""; btn.style.padding = ""; }
     }
 }
 
